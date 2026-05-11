@@ -8,6 +8,7 @@ const doctorRoutes = require('./routes/doctorRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const triageRoutes = require('./routes/triageRoutes');
 const passwordRoutes = require('./routes/passwordRoutes');
+require('./services/reminderService');
 
 const app = express();
 
