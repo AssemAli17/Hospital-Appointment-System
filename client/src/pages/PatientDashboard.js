@@ -11,6 +11,12 @@ const PatientDashboard = () => {
     const [triageResult, setTriageResult] = useState(null);
     const [triageLoading, setTriageLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('home');
+    const [doctors, setDoctors] = useState([]);
+    const [showBooking, setShowBooking] = useState(false);
+    const [selectedDoctor, setSelectedDoctor] = useState('');
+    const [appointmentDate, setAppointmentDate] = useState('');
+    const [appointmentTime, setAppointmentTime] = useState('');
+    const [bookingMessage, setBookingMessage] = useState('');
 
     useEffect(() => {
         fetchAppointments();
@@ -29,16 +35,51 @@ const PatientDashboard = () => {
 
     const handleTriage = async () => {
         setTriageLoading(true);
+        setShowBooking(false);
+        setBookingMessage('');
         try {
             const res = await axios.post('http://localhost:5000/api/triage/analyse',
                 { symptoms },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setTriageResult(res.data);
+            if (res.data.department_id) {
+                const doctorsRes = await axios.get(`http://localhost:5000/api/doctors/department/${res.data.department_id}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setDoctors(doctorsRes.data);
+                setShowBooking(true);
+            }
         } catch (err) {
             console.error(err);
         }
         setTriageLoading(false);
+    };
+
+    const handleBooking = async () => {
+        if (!selectedDoctor || !appointmentDate || !appointmentTime) {
+            setBookingMessage('Please fill in all booking fields');
+            return;
+        }
+        try {
+            await axios.post('http://localhost:5000/api/appointments',
+                {
+                    doctor_id: selectedDoctor,
+                    department_id: triageResult.department_id,
+                    appointment_date: appointmentDate,
+                    appointment_time: appointmentTime,
+                    notes: symptoms
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setBookingMessage('Appointment booked successfully!');
+            setShowBooking(false);
+            setTriageResult(null);
+            setSymptoms('');
+            fetchAppointments();
+        } catch (err) {
+            setBookingMessage('Failed to book appointment. Please try again.');
+        }
     };
 
     const handleLogout = () => {
@@ -90,6 +131,7 @@ const PatientDashboard = () => {
                             <button style={styles.btn} onClick={handleTriage} disabled={triageLoading}>
                                 {triageLoading ? 'Analysing...' : 'Analyse Symptoms'}
                             </button>
+
                             {triageResult && (
                                 <div style={styles.triageResult}>
                                     <p style={styles.triageTitle}>AI Recommendation</p>
@@ -114,7 +156,64 @@ const PatientDashboard = () => {
                                     </div>
                                 </div>
                             )}
+
+                            {showBooking && (
+                                <div style={styles.bookingSection}>
+                                    <h4 style={styles.bookingTitle}>📅 Book an Appointment</h4>
+                                    <p style={styles.hint}>Available doctors in {triageResult?.recommended_department}</p>
+
+                                    <div style={styles.formGroup}>
+                                        <label style={styles.label}>Select Doctor</label>
+                                        <select style={styles.select} value={selectedDoctor} onChange={(e) => setSelectedDoctor(e.target.value)}>
+                                            <option value="">Choose a doctor</option>
+                                            {doctors.map(doc => (
+                                                <option key={doc.doctor_id} value={doc.doctor_id}>
+                                                    Dr. {doc.first_name} {doc.last_name} — {doc.specialisation}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div style={styles.formGroup}>
+                                        <label style={styles.label}>Date</label>
+                                        <input
+                                            style={styles.input}
+                                            type="date"
+                                            value={appointmentDate}
+                                            onChange={(e) => setAppointmentDate(e.target.value)}
+                                            min={new Date().toISOString().split('T')[0]}
+                                        />
+                                    </div>
+
+                                    <div style={styles.formGroup}>
+                                        <label style={styles.label}>Time</label>
+                                        <input
+                                            style={styles.input}
+                                            type="time"
+                                            value={appointmentTime}
+                                            onChange={(e) => setAppointmentTime(e.target.value)}
+                                        />
+                                    </div>
+
+                                    <button style={styles.bookBtn} onClick={handleBooking}>Confirm Booking</button>
+                                </div>
+                            )}
+
+                            {bookingMessage && (
+                                <p style={{
+                                    marginTop: '12px',
+                                    padding: '10px',
+                                    borderRadius: '8px',
+                                    background: bookingMessage.includes('successfully') ? '#eaf6ee' : '#fce8e8',
+                                    color: bookingMessage.includes('successfully') ? '#2e7d32' : '#c62828',
+                                    fontSize: '13px',
+                                    fontWeight: 'bold'
+                                }}>
+                                    {bookingMessage}
+                                </p>
+                            )}
                         </div>
+
                         <div style={styles.card}>
                             <h3 style={styles.cardTitle}>📅 My Appointments</h3>
                             {appointments.length === 0 ? (
@@ -164,10 +263,17 @@ const styles = {
     cardTitle: { fontSize: '15px', fontWeight: 'bold', color: '#2C3E50', marginBottom: '14px' },
     hint: { fontSize: '12px', color: '#888', marginBottom: '10px' },
     textarea: { width: '100%', background: '#f5f5f5', border: '1px solid #d0d0d0', borderRadius: '8px', padding: '12px', fontSize: '13px', minHeight: '80px', resize: 'none', fontFamily: 'Arial, sans-serif', boxSizing: 'border-box', marginBottom: '12px' },
-    btn: { width: '100%', background: '#2C3E50', color: 'white', border: 'none', borderRadius: '8px', padding: '11px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer' },
+    btn: { width: '100%', background: '#2C3E50', color: 'white', border: 'none', borderRadius: '8px', padding: '11px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '8px' },
     triageResult: { background: '#eaf6ee', border: '1px solid #b2dfdb', borderRadius: '8px', padding: '14px', marginTop: '14px' },
     triageTitle: { fontSize: '12px', color: '#2e7d32', fontWeight: 'bold', marginBottom: '6px' },
     triageText: { fontSize: '13px', color: '#2e7d32', margin: '4px 0' },
+    bookingSection: { background: '#f0f4f8', border: '1px solid #d0d0d0', borderRadius: '8px', padding: '16px', marginTop: '14px' },
+    bookingTitle: { fontSize: '14px', fontWeight: 'bold', color: '#2C3E50', marginBottom: '10px' },
+    formGroup: { marginBottom: '12px' },
+    label: { display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#555', marginBottom: '5px' },
+    select: { width: '100%', background: '#ffffff', border: '1px solid #d0d0d0', borderRadius: '8px', padding: '10px', fontSize: '13px', boxSizing: 'border-box' },
+    input: { width: '100%', background: '#ffffff', border: '1px solid #d0d0d0', borderRadius: '8px', padding: '10px', fontSize: '13px', boxSizing: 'border-box' },
+    bookBtn: { width: '100%', background: '#27ae60', color: 'white', border: 'none', borderRadius: '8px', padding: '11px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer' },
     apptCard: { border: '1px solid #e0e0e0', borderRadius: '8px', padding: '14px', marginBottom: '12px' },
     apptHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' },
     apptDoctor: { fontSize: '13px', fontWeight: 'bold', color: '#2C3E50' },
