@@ -5,6 +5,8 @@ import Login from './pages/Login';
 import PatientDashboard from './pages/PatientDashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 const PrivateRoute = ({ children, role }) => {
     const { user } = useAuth();
@@ -19,6 +21,8 @@ function App() {
             <Router>
                 <Routes>
                     <Route path="/" element={<Login />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password/:token" element={<ResetPassword />} />
                     <Route path="/patient-dashboard" element={
                         <PrivateRoute role="patient">
                             <PatientDashboard />

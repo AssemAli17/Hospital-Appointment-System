@@ -7,6 +7,7 @@ const departmentRoutes = require('./routes/departmentRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const triageRoutes = require('./routes/triageRoutes');
+const passwordRoutes = require('./routes/passwordRoutes');
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use('/api/departments', departmentRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/triage', triageRoutes);
+app.use('/api/password', passwordRoutes);
 
 app.get('/', (req, res) => {
     res.json({ message: 'Hospital Appointment System API is running' });
