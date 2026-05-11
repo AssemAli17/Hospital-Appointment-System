@@ -96,6 +96,22 @@ const PatientDashboard = () => {
                                     <p style={styles.triageText}>Recommended Department: <strong>{triageResult.recommended_department}</strong></p>
                                     <p style={styles.triageText}>Reason: {triageResult.reason}</p>
                                     <p style={styles.triageText}>Urgency: <strong>{triageResult.urgency}</strong></p>
+                                    <div style={{
+                                        marginTop: '10px',
+                                        padding: '10px',
+                                        borderRadius: '8px',
+                                        background: triageResult.urgency === 'High' ? '#fce8e8' : triageResult.urgency === 'Medium' ? '#fff8e1' : '#eaf6ee',
+                                        border: `1px solid ${triageResult.urgency === 'High' ? '#ef9a9a' : triageResult.urgency === 'Medium' ? '#ffe082' : '#b2dfdb'}`
+                                    }}>
+                                        <p style={{
+                                            fontSize: '13px',
+                                            fontWeight: 'bold',
+                                            color: triageResult.urgency === 'High' ? '#c62828' : triageResult.urgency === 'Medium' ? '#f57f17' : '#2e7d32',
+                                            margin: 0
+                                        }}>
+                                            {triageResult.emergency_advice}
+                                        </p>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -134,7 +150,7 @@ const styles = {
     welcome: { color: '#a0aec0', fontSize: '13px' },
     logoutBtn: { background: '#3d5166', border: 'none', borderRadius: '20px', padding: '6px 16px', color: 'white', fontSize: '13px', cursor: 'pointer' },
     body: { display: 'flex', flex: 1 },
-    sidebar: { background: '#34495E', width: '210px', minHeight: 'calc(100vh - 93px)', padding: '24px 0', display: 'flex', flexDirection: 'column' },
+    sidebar: { background: '#34495E', width: '210px', padding: '24px 0', display: 'flex', flexDirection: 'column' },
     sidebarItem: { padding: '13px 24px', cursor: 'pointer', color: '#a0aec0', fontSize: '14px', borderLeft: '4px solid transparent' },
     activeItem: { background: '#2C3E50', color: 'white', fontWeight: 'bold', borderLeft: '4px solid #3498DB' },
     main: { flex: 1, padding: '28px' },

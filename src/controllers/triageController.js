@@ -40,8 +40,8 @@ const analyseSymptoms = async (req, res) => {
         });
 
         const aiResponse = completion.choices[0].message.content;
-const cleanResponse = aiResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-const parsed = JSON.parse(cleanResponse);
+        const cleanResponse = aiResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        const parsed = JSON.parse(cleanResponse);
 
         const dept = await pool.query(
             'SELECT department_id FROM departments WHERE name = $1',
@@ -55,11 +55,21 @@ const parsed = JSON.parse(cleanResponse);
             [patient_id, recommended_dept_id, symptoms, aiResponse]
         );
 
+        let emergencyAdvice = '';
+        if (parsed.urgency === 'High') {
+            emergencyAdvice = 'This is a HIGH urgency case. Please call 999 immediately or go to your nearest A&E.';
+        } else if (parsed.urgency === 'Medium') {
+            emergencyAdvice = 'This is a MEDIUM urgency case. Please call 111 for further medical advice.';
+        } else {
+            emergencyAdvice = 'This is a LOW urgency case. Please book an appointment at your earliest convenience.';
+        }
+
         res.status(200).json({
             message: 'Triage analysis complete',
             recommended_department: parsed.recommended_department,
             reason: parsed.reason,
             urgency: parsed.urgency,
+            emergency_advice: emergencyAdvice,
             department_id: recommended_dept_id
         });
 
