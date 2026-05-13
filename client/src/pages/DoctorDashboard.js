@@ -8,6 +8,10 @@ const DoctorDashboard = () => {
     const navigate = useNavigate();
     const [appointments, setAppointments] = useState([]);
     const [activeTab, setActiveTab] = useState('home');
+    const [rescheduleId, setRescheduleId] = useState(null);
+    const [rescheduleDate, setRescheduleDate] = useState('');
+    const [rescheduleTime, setRescheduleTime] = useState('');
+    const [rescheduleMessage, setRescheduleMessage] = useState('');
 
     useEffect(() => {
         fetchAppointments();
@@ -40,6 +44,26 @@ const DoctorDashboard = () => {
         }
     };
 
+    const handleReschedule = async (id) => {
+        if (!rescheduleDate || !rescheduleTime) {
+            setRescheduleMessage('Please select a new date and time');
+            return;
+        }
+        try {
+            await axios.put(`http://localhost:5000/api/appointments/reschedule/${id}`,
+                { appointment_date: rescheduleDate, appointment_time: rescheduleTime },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setRescheduleId(null);
+            setRescheduleDate('');
+            setRescheduleTime('');
+            setRescheduleMessage('');
+            fetchAppointments();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     return (
         <div style={styles.page}>
             <nav style={styles.navbar}>
@@ -51,9 +75,9 @@ const DoctorDashboard = () => {
             </nav>
             <div style={styles.body}>
                 <div style={styles.sidebar}>
-                    <div style={{...styles.sidebarItem, ...(activeTab === 'home' ? styles.activeItem : {})}} onClick={() => setActiveTab('home')}>Home</div>
-                    <div style={{...styles.sidebarItem, ...(activeTab === 'schedule' ? styles.activeItem : {})}} onClick={() => setActiveTab('schedule')}>My Schedule</div>
-                    <div style={{...styles.sidebarItem, ...(activeTab === 'patients' ? styles.activeItem : {})}} onClick={() => setActiveTab('patients')}>My Patients</div>
+                    <div style={{...styles.sidebarItem, ...(activeTab === 'home' ? styles.activeItem : {})}} onClick={() => setActiveTab('home')}>🏠 Home</div>
+                    <div style={{...styles.sidebarItem, ...(activeTab === 'schedule' ? styles.activeItem : {})}} onClick={() => setActiveTab('schedule')}>📅 My Schedule</div>
+                    <div style={{...styles.sidebarItem, ...(activeTab === 'patients' ? styles.activeItem : {})}} onClick={() => setActiveTab('patients')}>👥 My Patients</div>
                 </div>
                 <div style={styles.main}>
                     <h2 style={styles.pageTitle}>Doctor Dashboard</h2>
@@ -72,7 +96,7 @@ const DoctorDashboard = () => {
                         </div>
                     </div>
                     <div style={styles.card}>
-                        <h3 style={styles.cardTitle}>My Appointments</h3>
+                        <h3 style={styles.cardTitle}>📅 My Appointments</h3>
                         {appointments.length === 0 ? (
                             <p style={styles.hint}>No appointments yet</p>
                         ) : (
@@ -80,12 +104,38 @@ const DoctorDashboard = () => {
                                 <div key={appt.appointment_id} style={styles.apptCard}>
                                     <div style={styles.apptHeader}>
                                         <span style={styles.apptPatient}>{appt.patient_first_name} {appt.patient_last_name}</span>
-                                        <span style={styles.badge}>{appt.status}</span>
+                                        <span style={{...styles.badge, background: appt.status === 'confirmed' ? '#e3f2fd' : appt.status === 'cancelled' ? '#fce8e8' : '#fff8e1', color: appt.status === 'confirmed' ? '#1565c0' : appt.status === 'cancelled' ? '#c62828' : '#f57f17'}}>{appt.status}</span>
                                     </div>
                                     <p style={styles.apptInfo}>{appt.department}</p>
                                     <p style={styles.apptInfo}>{new Date(appt.appointment_date).toLocaleDateString()} at {appt.appointment_time}</p>
                                     {appt.status !== 'cancelled' && (
-                                        <button style={styles.cancelBtn} onClick={() => handleCancel(appt.appointment_id)}>Cancel</button>
+                                        <div style={styles.btnRow}>
+                                            <button style={styles.cancelBtn} onClick={() => handleCancel(appt.appointment_id)}>Cancel</button>
+                                            <button style={styles.rescheduleBtn} onClick={() => setRescheduleId(appt.appointment_id)}>Reschedule</button>
+                                        </div>
+                                    )}
+                                    {rescheduleId === appt.appointment_id && (
+                                        <div style={styles.rescheduleBox}>
+                                            <p style={styles.rescheduleTitle}>Select new date and time</p>
+                                            <input
+                                                style={styles.input}
+                                                type="date"
+                                                value={rescheduleDate}
+                                                onChange={(e) => setRescheduleDate(e.target.value)}
+                                                min={new Date().toISOString().split('T')[0]}
+                                            />
+                                            <input
+                                                style={{...styles.input, marginTop: '8px'}}
+                                                type="time"
+                                                value={rescheduleTime}
+                                                onChange={(e) => setRescheduleTime(e.target.value)}
+                                            />
+                                            {rescheduleMessage && <p style={{color: 'red', fontSize: '12px'}}>{rescheduleMessage}</p>}
+                                            <div style={styles.btnRow}>
+                                                <button style={styles.bookBtn} onClick={() => handleReschedule(appt.appointment_id)}>Confirm</button>
+                                                <button style={styles.cancelBtn} onClick={() => setRescheduleId(null)}>Cancel</button>
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
                             ))
@@ -123,9 +173,15 @@ const styles = {
     apptCard: { border: '1px solid #e0e0e0', borderRadius: '8px', padding: '14px', marginBottom: '12px' },
     apptHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' },
     apptPatient: { fontSize: '13px', fontWeight: 'bold', color: '#2C3E50' },
-    badge: { fontSize: '11px', padding: '3px 10px', borderRadius: '12px', background: '#e3f2fd', color: '#1565c0' },
+    badge: { fontSize: '11px', padding: '3px 10px', borderRadius: '12px' },
     apptInfo: { fontSize: '12px', color: '#888', margin: '2px 0' },
-    cancelBtn: { background: '#e53e3e', color: 'white', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', cursor: 'pointer', marginTop: '8px' },
+    btnRow: { display: 'flex', gap: '8px', marginTop: '10px' },
+    cancelBtn: { flex: 1, background: '#e53e3e', color: 'white', border: 'none', borderRadius: '8px', padding: '8px', fontSize: '12px', cursor: 'pointer' },
+    rescheduleBtn: { flex: 1, background: '#2C3E50', color: 'white', border: 'none', borderRadius: '8px', padding: '8px', fontSize: '12px', cursor: 'pointer' },
+    bookBtn: { flex: 1, background: '#27ae60', color: 'white', border: 'none', borderRadius: '8px', padding: '10px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' },
+    rescheduleBox: { background: '#f0f4f8', border: '1px solid #d0d0d0', borderRadius: '8px', padding: '12px', marginTop: '10px' },
+    rescheduleTitle: { fontSize: '12px', fontWeight: 'bold', color: '#2C3E50', marginBottom: '8px' },
+    input: { width: '100%', background: '#ffffff', border: '1px solid #d0d0d0', borderRadius: '8px', padding: '10px', fontSize: '13px', boxSizing: 'border-box' },
     footer: { background: '#2C3E50', padding: '10px', textAlign: 'center' },
     footerText: { fontSize: '12px', color: '#a0aec0' }
 };
