@@ -6,6 +6,7 @@ import Register from './pages/Register';
 import PatientDashboard from './pages/PatientDashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import ManageDoctors from './pages/ManageDoctors';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 
@@ -38,6 +39,11 @@ function App() {
                     <Route path="/admin-dashboard" element={
                         <PrivateRoute role="admin">
                             <AdminDashboard />
+                        </PrivateRoute>
+                    } />
+                    <Route path="/admin/manage-doctors" element={
+                        <PrivateRoute role="admin">
+                            <ManageDoctors />
                         </PrivateRoute>
                     } />
                 </Routes>

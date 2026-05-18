@@ -68,4 +68,29 @@ const getDoctorProfile = async (req, res) => {
     }
 };
 
-module.exports = { getAllDoctors, getDoctorsByDepartment, updateAvailability, getDoctorProfile };
+const addDoctor = async (req, res) => {
+    const { user_id, department_id, specialisation } = req.body;
+    try {
+        const result = await pool.query(
+            'INSERT INTO doctors (user_id, department_id, specialisation, is_available) VALUES ($1, $2, $3, true) RETURNING *',
+            [user_id, department_id, specialisation]
+        );
+        res.status(201).json({ message: 'Doctor added successfully', doctor: result.rows[0] });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+const deleteDoctor = async (req, res) => {
+    const { doctor_id } = req.params;
+    try {
+        await pool.query('DELETE FROM doctors WHERE doctor_id = $1', [doctor_id]);
+        res.status(200).json({ message: 'Doctor removed successfully' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+module.exports = { getAllDoctors, getDoctorsByDepartment, updateAvailability, getDoctorProfile, addDoctor, deleteDoctor };

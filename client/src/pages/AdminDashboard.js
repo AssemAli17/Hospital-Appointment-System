@@ -54,7 +54,7 @@ const AdminDashboard = () => {
             <div style={styles.body}>
                 <div style={styles.sidebar}>
                     <div style={{...styles.sidebarItem, ...(activeTab === 'home' ? styles.activeItem : {})}} onClick={() => setActiveTab('home')}>📊 Dashboard</div>
-                    <div style={{...styles.sidebarItem, ...(activeTab === 'doctors' ? styles.activeItem : {})}} onClick={() => setActiveTab('doctors')}>👨‍⚕️ Manage Doctors</div>
+                    <div style={{...styles.sidebarItem, ...(activeTab === 'doctors' ? styles.activeItem : {})}} onClick={() => navigate('/admin/manage-doctors')}>👨‍⚕️ Manage Doctors</div>
                     <div style={{...styles.sidebarItem, ...(activeTab === 'appointments' ? styles.activeItem : {})}} onClick={() => setActiveTab('appointments')}>📅 Appointments</div>
                     <div style={{...styles.sidebarItem, ...(activeTab === 'users' ? styles.activeItem : {})}} onClick={() => setActiveTab('users')}>👥 User Accounts</div>
                 </div>
@@ -125,7 +125,7 @@ const styles = {
     welcome: { color: '#a0aec0', fontSize: '13px' },
     logoutBtn: { background: '#3d5166', border: 'none', borderRadius: '20px', padding: '6px 16px', color: 'white', fontSize: '13px', cursor: 'pointer' },
     body: { display: 'flex', flex: 1 },
-    sidebar: { background: '#34495E', width: '210px', minHeight: 'calc(100vh - 93px)', padding: '24px 0', display: 'flex', flexDirection: 'column' },
+    sidebar: { background: '#34495E', width: '210px', padding: '24px 0', display: 'flex', flexDirection: 'column' },
     sidebarItem: { padding: '13px 24px', cursor: 'pointer', color: '#a0aec0', fontSize: '14px', borderLeft: '4px solid transparent' },
     activeItem: { background: '#2C3E50', color: 'white', fontWeight: 'bold', borderLeft: '4px solid #3498DB' },
     main: { flex: 1, padding: '28px' },
