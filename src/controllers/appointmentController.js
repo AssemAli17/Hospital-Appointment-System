@@ -1,4 +1,14 @@
 const pool = require('../config/db');
+const nodemailer = require('nodemailer');
+require('dotenv').config();
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
 
 const bookAppointment = async (req, res) => {
     const { doctor_id, department_id, appointment_date, appointment_time, notes } = req.body;
@@ -9,6 +19,42 @@ const bookAppointment = async (req, res) => {
             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
             [patient_id, doctor_id, department_id, appointment_date, appointment_time, notes]
         );
+
+        const appointment = result.rows[0];
+
+        const patientRes = await pool.query('SELECT * FROM users WHERE user_id = $1', [patient_id]);
+        const doctorRes = await pool.query(`
+            SELECT u.first_name, u.last_name FROM doctors d
+            JOIN users u ON d.user_id = u.user_id
+            WHERE d.doctor_id = $1
+        `, [doctor_id]);
+        const deptRes = await pool.query('SELECT name FROM departments WHERE department_id = $1', [department_id]);
+
+        const patient = patientRes.rows[0];
+        const doctor = doctorRes.rows[0];
+        const department = deptRes.rows[0];
+
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: patient.email,
+            subject: 'Appointment Confirmation - Hospital Appointment System',
+            html: `
+                <h2>Appointment Confirmed</h2>
+                <p>Dear ${patient.first_name} ${patient.last_name},</p>
+                <p>Your appointment has been successfully booked. Here are the details:</p>
+                <div style="background:#f5f5f5;padding:16px;border-radius:8px;margin:16px 0;">
+                    <p><strong>Doctor:</strong> Dr. ${doctor.first_name} ${doctor.last_name}</p>
+                    <p><strong>Department:</strong> ${department.name}</p>
+                    <p><strong>Date:</strong> ${new Date(appointment_date).toLocaleDateString()}</p>
+                    <p><strong>Time:</strong> ${appointment_time}</p>
+                    <p><strong>Status:</strong> Pending</p>
+                </div>
+                <p>You will receive a reminder email 24 hours before your appointment.</p>
+                <p>If you need to cancel or reschedule please log in to the Hospital Appointment System.</p>
+                <p>Best regards,<br>Hospital Appointment System</p>
+            `
+        });
+
         res.status(201).json({ message: 'Appointment booked successfully', appointment: result.rows[0] });
     } catch (err) {
         console.error(err.message);
