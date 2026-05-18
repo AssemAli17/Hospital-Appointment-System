@@ -66,6 +66,10 @@ const Login = () => {
                         </div>
                         <button style={styles.button} type="submit">Login</button>
                     </form>
+                    <div style={styles.registerRow}>
+                        <span style={styles.registerText}>Don't have an account? </span>
+                        <span style={styles.registerLink} onClick={() => navigate('/register')}>Register here</span>
+                    </div>
                 </div>
             </div>
             <footer style={styles.footer}>
@@ -91,7 +95,10 @@ const styles = {
     input: { width: '100%', background: '#ffffff', border: '1px solid #d0d0d0', borderRadius: '8px', padding: '11px 14px', fontSize: '14px', boxSizing: 'border-box' },
     forgotRow: { textAlign: 'right', marginBottom: '18px', marginTop: '-10px' },
     forgotLink: { fontSize: '13px', color: '#2C3E50', fontWeight: 'bold', cursor: 'pointer' },
-    button: { width: '100%', background: '#2C3E50', color: 'white', border: 'none', borderRadius: '8px', padding: '13px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer' },
+    button: { width: '100%', background: '#2C3E50', color: 'white', border: 'none', borderRadius: '8px', padding: '13px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '16px' },
+    registerRow: { textAlign: 'center' },
+    registerText: { fontSize: '13px', color: '#888' },
+    registerLink: { fontSize: '13px', color: '#2C3E50', fontWeight: 'bold', cursor: 'pointer' },
     footer: { background: '#2C3E50', padding: '10px', textAlign: 'center' },
     footerText: { fontSize: '12px', color: '#a0aec0' }
 };
